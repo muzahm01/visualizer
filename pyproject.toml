@@ -1,0 +1,13 @@
+[project]
+name = "visualizer"
+version = "0.1.0"
+description = "A simple data visualization app for JSON and CSV files."
+dependencies = [
+    "streamlit>=1.18.0",
+    "plotly>=5.0.0",
+    "pandas>=1.4.0"
+]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"

@@ -1,0 +1,7 @@
+Metadata-Version: 2.4
+Name: visualizer
+Version: 0.1.0
+Summary: A simple data visualization app for JSON and CSV files.
+Requires-Dist: streamlit>=1.18.0
+Requires-Dist: plotly>=5.0.0
+Requires-Dist: pandas>=1.4.0
