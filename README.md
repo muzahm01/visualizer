@@ -38,7 +38,7 @@ Visualizer is a multipage Streamlit application for interactive data analysis an
 1. Clone this repository:
 
    ```bash
-   git clone https://github.com/your_username/visualizer.git
+   git clone git@github.com:muzahm01/visualizer.git
    cd visualizer
    ```
 2. Install the project in editable mode using pip:
