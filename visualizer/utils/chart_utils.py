@@ -1,5 +1,4 @@
 import plotly.express as px
-import plotly.graph_objects as go
 
 
 def build_plotly_chart(df, x_col, y_col, chart_type, options):
