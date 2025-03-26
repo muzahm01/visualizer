@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import altair as alt
 from visualizer.utils import json_parser, chart_utils
 
 st.title("JSON Files Comparison")
@@ -19,7 +18,7 @@ if json_file1 and json_file2:
     tables2 = json_parser.extract_json_tables(data2)
 
     selected_table = st.selectbox(
-        "Select Table (from File 1)", list(tables1.keys()), key="jc_table")
+        "Select Table", list(tables1.keys()), key="jc_table")
     table_data1 = tables1[selected_table]
     table_data2 = tables2.get(selected_table, [])
 
@@ -37,36 +36,46 @@ if json_file1 and json_file2:
                           "(none)"] + columns, key="jc_x")
     y_axis = st.selectbox("Select Y Axis (optional)", [
                           "(none)"] + columns, key="jc_y")
-    chart_type = st.radio(
-        "Chart Type", ["Line", "Bar", "Area", "Scatter"], key="jc_chart")
+    chart_type = st.radio("Chart Type",
+                          ["Line Chart", "Bar Chart", "Scatter Chart",
+                           "Area Chart", "Box Plot", "Histogram", "Violin Plot", "Pie Chart"],
+                          key="jc_chart")
 
-    if st.button("Generate Comparison Chart", key="jc_generate"):
-        if x_axis != "(none)" and y_axis != "(none)":
-            # Build separate DataFrames for each file and add a "File" column.
-            df1_chart = pd.DataFrame(table_data1)[
-                [x_axis, y_axis]].dropna().copy()
-            df1_chart["File"] = "File 1"
-            df2_chart = pd.DataFrame(table_data2)[[x_axis, y_axis]].dropna(
-            ).copy() if table_data2 else pd.DataFrame()
-            if not df2_chart.empty:
-                df2_chart["File"] = "File 2"
+    # Extra options for Line Chart
+    options = {}
+    if chart_type == "Line Chart":
+        options["show_markers"] = st.checkbox(
+            "Show Markers", value=True, key="jc_show_markers")
 
-            # Combine data from both files
-            chart_df = pd.concat([df1_chart, df2_chart], ignore_index=True)
+    if x_axis != "(none)" and y_axis != "(none)":
+        # Build DataFrames and add a "File" column to identify the data.
+        df1_chart = pd.DataFrame(table_data1)[[x_axis, y_axis]].dropna().copy()
+        df1_chart["File"] = "File 1"
+        df2_chart = pd.DataFrame(table_data2)[[x_axis, y_axis]].dropna(
+        ).copy() if table_data2 else pd.DataFrame()
+        if not df2_chart.empty:
+            df2_chart["File"] = "File 2"
+        chart_df = pd.concat([df1_chart, df2_chart], ignore_index=True)
 
-            # Convert x-axis if it appears numeric and contains "timestamp"
-            if "timestamp" in x_axis.lower() and pd.api.types.is_numeric_dtype(chart_df[x_axis]):
-                unit = "ms" if chart_df[x_axis].iloc[0] > 1e10 else "s"
-                chart_df[x_axis] = pd.to_datetime(chart_df[x_axis], unit=unit)
+        # If the x-axis looks like a timestamp, convert it.
+        if "timestamp" in x_axis.lower() and pd.api.types.is_numeric_dtype(chart_df[x_axis]):
+            unit = "ms" if chart_df[x_axis].iloc[0] > 1e10 else "s"
+            chart_df[x_axis] = pd.to_datetime(chart_df[x_axis], unit=unit)
 
-            options = {}
-            if chart_type == "Line":
-                options["show_markers"] = st.checkbox(
-                    "Show Markers", value=True, key="jc_show_markers")
-
-            # Build the comparison chart using our updated function
-            chart = chart_utils.build_comparison_chart(
+        if chart_type != "Pie Chart":
+            fig = chart_utils.build_comparison_chart(
                 chart_df, x_axis, y_axis, chart_type, options)
-            st.altair_chart(chart, use_container_width=True)
+            st.plotly_chart(fig, use_container_width=True)
         else:
-            st.info("Axes selection is optional.")
+            # For Pie Chart, build separate pies for each file.
+            df1_pie = df1_chart.copy()
+            df2_pie = df2_chart.copy()
+            fig1 = chart_utils.build_plotly_chart(
+                df1_pie, x_axis, y_axis, "Pie Chart", options)
+            fig2 = chart_utils.build_plotly_chart(
+                df2_pie, x_axis, y_axis, "Pie Chart", options)
+            st.plotly_chart(fig1, use_container_width=True)
+            st.plotly_chart(fig2, use_container_width=True)
+
+        st.subheader("Combined Data Table")
+        st.dataframe(chart_df)

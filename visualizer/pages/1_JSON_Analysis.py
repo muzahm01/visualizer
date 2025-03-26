@@ -24,20 +24,26 @@ if json_file:
                               "(none)"] + columns, key="ja_x")
         y_axis = st.selectbox("Select Y Axis (optional)", [
                               "(none)"] + columns, key="ja_y")
-        chart_type = st.radio(
-            "Chart Type", ["Line", "Bar", "Area", "Scatter"], key="ja_chart")
-        if st.button("Generate Chart", key="ja_generate"):
-            if x_axis != "(none)" and y_axis != "(none)":
-                chart_df = df[[x_axis, y_axis]].dropna().copy()
-                # If x-axis seems like a timestamp and numeric, convert it.
-                if "timestamp" in x_axis.lower() and pd.api.types.is_numeric_dtype(chart_df[x_axis]):
+        chart_type = st.radio("Chart Type",
+                              ["Line Chart", "Bar Chart", "Scatter Chart", "Area Chart",
+                               "Box Plot", "Histogram", "Violin Plot", "Pie Chart"],
+                              key="ja_chart")
+
+        if x_axis != "(none)" and y_axis != "(none)":
+            chart_df = df[[x_axis, y_axis]].dropna().copy()
+            # If x-axis appears to be a timestamp and is numeric, convert it.
+            if "timestamp" in x_axis.lower() and pd.api.types.is_numeric_dtype(chart_df[x_axis]):
+                try:
                     unit = "ms" if chart_df[x_axis].iloc[0] > 1e10 else "s"
                     chart_df[x_axis] = pd.to_datetime(
                         chart_df[x_axis], unit=unit)
-                chart = chart_utils.build_chart(
-                    chart_df, x_axis, y_axis, chart_type, options={})
-                st.altair_chart(chart, use_container_width=True)
-            else:
-                st.info("No chart generated (axes selection is optional).")
+                except Exception as e:
+                    st.error(f"Timestamp conversion failed: {e}")
+            # Build and display the chart using Plotly Express via chart_utils.
+            fig = chart_utils.build_plotly_chart(
+                chart_df, x_axis, y_axis, chart_type, options={})
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Please select both X and Y axes to generate a chart.")
     else:
         st.error("No valid table found in the JSON file.")
