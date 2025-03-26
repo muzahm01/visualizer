@@ -66,7 +66,6 @@ def build_plotly_chart(df, x_col, y_col, chart_type, options):
             points=points
         )
     elif chart_type == "Histogram":
-        # Use empty string as default histnorm for count.
         histnorm = options.get("histnorm", "count")
         if histnorm == "count":
             histnorm = ""
@@ -106,6 +105,11 @@ def build_plotly_chart(df, x_col, y_col, chart_type, options):
             line_shape=line_shape,
             title=f"Line Chart: {y_col} vs {x_col}"
         )
+
+    # Apply fill area for Line Chart if selected.
+    if chart_type in ["Line Chart", "Area Chart"] and options.get("fill_area", False):
+        fig.for_each_trace(lambda t: t.update(fill="tozeroy"))
+
     return fig
 
 
@@ -212,6 +216,10 @@ def build_comparison_chart(df, x_col, y_col, chart_type, options):
             line_shape=line_shape,
             title=f"Line Chart: {y_col} vs {x_col}"
         )
+
+    # Apply fill area for Line Chart if selected.
+    if chart_type in ["Line Chart", "Area Chart"] and options.get("fill_area", False):
+        fig.for_each_trace(lambda t: t.update(fill="tozeroy"))
 
     # Update hover template for each trace if x and y data exist.
     if fig is not None:

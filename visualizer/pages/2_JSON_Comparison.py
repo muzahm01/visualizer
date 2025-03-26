@@ -1,11 +1,10 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 from visualizer.utils import json_parser, chart_utils
 
 st.title("JSON Files Comparison")
 
-# Upload two JSON files
+# Upload two JSON files.
 json_file1 = st.file_uploader("Upload JSON File 1", type=[
                               "json"], key="jc_json1")
 json_file2 = st.file_uploader("Upload JSON File 2", type=[
@@ -42,12 +41,46 @@ if json_file1 and json_file2:
                            "Area Chart", "Box Plot", "Histogram", "Violin Plot", "Pie Chart"],
                           key="jc_chart")
 
-    # Extra options for Line Chart
+    # Additional options based on chart type.
     options = {}
     if chart_type == "Line Chart":
         options["show_markers"] = st.checkbox(
             "Show Markers", value=True, key="jc_show_markers")
+        options["smooth_lines"] = st.checkbox(
+            "Smooth Lines (spline)", value=False, key="jc_smooth")
+        options["fill_area"] = st.checkbox(
+            "Fill Area", value=False, key="jc_fill")
+    elif chart_type == "Bar Chart":
+        options["barmode"] = st.radio(
+            "Bar Mode", ["group", "stack"], index=0, key="jc_barmode")
+    elif chart_type == "Scatter Chart":
+        options["show_markers"] = st.checkbox(
+            "Show Markers", value=True, key="jc_scatter_marker")
+        options["opacity"] = st.slider(
+            "Opacity", 0.0, 1.0, 0.8, key="jc_opacity")
+    elif chart_type == "Area Chart":
+        options["smooth_lines"] = st.checkbox(
+            "Smooth Lines (spline)", value=False, key="jc_area_smooth")
+    elif chart_type == "Box Plot":
+        options["notched"] = st.checkbox(
+            "Notched", value=False, key="jc_notched")
+        options["points"] = st.radio(
+            "Show Points", ["all", "outliers", "none"], index=1, key="jc_box_points")
+    elif chart_type == "Histogram":
+        options["histnorm"] = st.radio("Normalization", ["", "percent", "probability", "density", "probability density"],
+                                       index=0, key="jc_histnorm")
+    elif chart_type == "Violin Plot":
+        options["box"] = st.checkbox(
+            "Show Box", value=True, key="jc_violin_box")
+        options["points"] = st.radio(
+            "Show Points", ["all", "outliers", "none"], index=1, key="jc_violin_points")
+        options["meanline"] = st.checkbox(
+            "Show Mean Line", value=False, key="jc_violin_mean")
+    elif chart_type == "Pie Chart":
+        options["donut"] = st.slider(
+            "Donut Hole Size", 0.0, 1.0, 0.0, step=0.1, key="jc_donut")
 
+    # Auto-generate chart if both axes are selected.
     if x_axis != "(none)" and y_axis != "(none)":
         # Build DataFrames and add a "File" column.
         df1_chart = pd.DataFrame(table_data1)[[x_axis, y_axis]].dropna().copy()
@@ -58,7 +91,7 @@ if json_file1 and json_file2:
             df2_chart["File"] = "File 2"
         chart_df = pd.concat([df1_chart, df2_chart], ignore_index=True)
 
-        # Convert x-axis column to datetime if its name suggests a timestamp.
+        # Convert x-axis to datetime if its name suggests a timestamp.
         if "timestamp" in x_axis.lower() and pd.api.types.is_numeric_dtype(chart_df[x_axis]):
             unit = "ms" if chart_df[x_axis].iloc[0] > 1e10 else "s"
             chart_df[x_axis] = pd.to_datetime(chart_df[x_axis], unit=unit)
@@ -83,3 +116,5 @@ if json_file1 and json_file2:
 
         st.subheader("Combined Data Table")
         st.dataframe(chart_df)
+    else:
+        st.info("Please select both X and Y axes to generate a chart.")
