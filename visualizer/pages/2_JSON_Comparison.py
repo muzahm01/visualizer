@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 from visualizer.utils import json_parser, chart_utils
 
 st.title("JSON Files Comparison")
@@ -48,7 +49,7 @@ if json_file1 and json_file2:
             "Show Markers", value=True, key="jc_show_markers")
 
     if x_axis != "(none)" and y_axis != "(none)":
-        # Build DataFrames and add a "File" column to identify the data.
+        # Build DataFrames and add a "File" column.
         df1_chart = pd.DataFrame(table_data1)[[x_axis, y_axis]].dropna().copy()
         df1_chart["File"] = "File 1"
         df2_chart = pd.DataFrame(table_data2)[[x_axis, y_axis]].dropna(
@@ -57,7 +58,7 @@ if json_file1 and json_file2:
             df2_chart["File"] = "File 2"
         chart_df = pd.concat([df1_chart, df2_chart], ignore_index=True)
 
-        # If the x-axis looks like a timestamp, convert it.
+        # Convert x-axis column to datetime if its name suggests a timestamp.
         if "timestamp" in x_axis.lower() and pd.api.types.is_numeric_dtype(chart_df[x_axis]):
             unit = "ms" if chart_df[x_axis].iloc[0] > 1e10 else "s"
             chart_df[x_axis] = pd.to_datetime(chart_df[x_axis], unit=unit)
@@ -65,17 +66,20 @@ if json_file1 and json_file2:
         if chart_type != "Pie Chart":
             fig = chart_utils.build_comparison_chart(
                 chart_df, x_axis, y_axis, chart_type, options)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, use_container_width=True,
+                            key="jc_chart_nonpie")
         else:
-            # For Pie Chart, build separate pies for each file.
-            df1_pie = df1_chart.copy()
-            df2_pie = df2_chart.copy()
+            # For Pie Chart, build separate charts for each file.
             fig1 = chart_utils.build_plotly_chart(
-                df1_pie, x_axis, y_axis, "Pie Chart", options)
+                df1_chart, x_axis, y_axis, "Pie Chart", options)
             fig2 = chart_utils.build_plotly_chart(
-                df2_pie, x_axis, y_axis, "Pie Chart", options)
-            st.plotly_chart(fig1, use_container_width=True)
-            st.plotly_chart(fig2, use_container_width=True)
+                df2_chart, x_axis, y_axis, "Pie Chart", options)
+            st.write("#### File 1 - Pie Chart")
+            st.plotly_chart(fig1, use_container_width=True,
+                            key="jc_pie_chart1")
+            st.write("#### File 2 - Pie Chart")
+            st.plotly_chart(fig2, use_container_width=True,
+                            key="jc_pie_chart2")
 
         st.subheader("Combined Data Table")
         st.dataframe(chart_df)
