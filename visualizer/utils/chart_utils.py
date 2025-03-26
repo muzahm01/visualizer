@@ -66,6 +66,7 @@ def build_plotly_chart(df, x_col, y_col, chart_type, options):
             points=points
         )
     elif chart_type == "Histogram":
+        # Use an empty string as default for histnorm.
         histnorm = options.get("histnorm", "count")
         if histnorm == "count":
             histnorm = ""
@@ -105,11 +106,9 @@ def build_plotly_chart(df, x_col, y_col, chart_type, options):
             line_shape=line_shape,
             title=f"Line Chart: {y_col} vs {x_col}"
         )
-
-    # Apply fill area for Line Chart if selected.
+    # Apply fill area for Line and Area charts if selected.
     if chart_type in ["Line Chart", "Area Chart"] and options.get("fill_area", False):
         fig.for_each_trace(lambda t: t.update(fill="tozeroy"))
-
     return fig
 
 
@@ -202,7 +201,7 @@ def build_comparison_chart(df, x_col, y_col, chart_type, options):
         if options.get("meanline", False):
             fig.update_traces(meanline_visible=True)
     elif chart_type == "Pie Chart":
-        # For comparisons, it's common to generate separate pie charts.
+        # For comparisons, generate separate pie charts.
         fig = None
     else:
         line_shape = "spline" if options.get(
@@ -217,7 +216,7 @@ def build_comparison_chart(df, x_col, y_col, chart_type, options):
             title=f"Line Chart: {y_col} vs {x_col}"
         )
 
-    # Apply fill area for Line Chart if selected.
+    # Apply fill area for Line and Area charts if selected.
     if chart_type in ["Line Chart", "Area Chart"] and options.get("fill_area", False):
         fig.for_each_trace(lambda t: t.update(fill="tozeroy"))
 

@@ -67,7 +67,7 @@ if json_file1 and json_file2:
         options["points"] = st.radio(
             "Show Points", ["all", "outliers", "none"], index=1, key="jc_box_points")
     elif chart_type == "Histogram":
-        options["histnorm"] = st.radio("Normalization", ["", "percent", "probability", "density", "probability density"],
+        options["histnorm"] = st.radio("Normalization", ["count", "percent", "probability", "density", "probability density"],
                                        index=0, key="jc_histnorm")
     elif chart_type == "Violin Plot":
         options["box"] = st.checkbox(

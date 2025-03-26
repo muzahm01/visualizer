@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 from visualizer.utils import csv_parser, chart_utils
 
 st.title("CSV Files Comparison")
@@ -33,9 +32,50 @@ if csv_file1 and csv_file2:
                                "Area Chart", "Box Plot", "Histogram", "Violin Plot", "Pie Chart"],
                               key="cc_chart")
 
-        # Only proceed if both axes are selected (optional selection).
+        # Show additional chart options based on selected chart type.
+        options = {}
+        if chart_type == "Line Chart":
+            options["show_markers"] = st.checkbox(
+                "Show Markers", value=True, key="cc_show_markers")
+            options["smooth_lines"] = st.checkbox(
+                "Smooth Lines (spline)", value=False, key="cc_smooth")
+            options["fill_area"] = st.checkbox(
+                "Fill Area", value=False, key="cc_fill")
+        elif chart_type == "Bar Chart":
+            options["barmode"] = st.radio(
+                "Bar Mode", ["group", "stack"], index=0, key="cc_barmode")
+        elif chart_type == "Scatter Chart":
+            options["show_markers"] = st.checkbox(
+                "Show Markers", value=True, key="cc_scatter_marker")
+            options["opacity"] = st.slider(
+                "Opacity", 0.0, 1.0, 0.8, key="cc_opacity")
+        elif chart_type == "Area Chart":
+            options["smooth_lines"] = st.checkbox(
+                "Smooth Lines (spline)", value=False, key="cc_area_smooth")
+        elif chart_type == "Box Plot":
+            options["notched"] = st.checkbox(
+                "Notched", value=False, key="cc_notched")
+            options["points"] = st.radio(
+                "Show Points", ["all", "outliers", "none"], index=1, key="cc_box_points")
+        elif chart_type == "Histogram":
+            options["histnorm"] = st.radio("Normalization",
+                                           ["count", "percent", "probability",
+                                               "density", "probability density"],
+                                           index=0, key="cc_histnorm")
+        elif chart_type == "Violin Plot":
+            options["box"] = st.checkbox(
+                "Show Box", value=True, key="cc_violin_box")
+            options["points"] = st.radio(
+                "Show Points", ["all", "outliers", "none"], index=1, key="cc_violin_points")
+            options["meanline"] = st.checkbox(
+                "Show Mean Line", value=False, key="cc_violin_mean")
+        elif chart_type == "Pie Chart":
+            options["donut"] = st.slider(
+                "Donut Hole Size", 0.0, 1.0, 0.0, step=0.1, key="cc_donut")
+
+        # Auto-generate chart if both axes are selected.
         if x_axis != "(none)" and y_axis != "(none)":
-            # Build individual DataFrames and tag with file names.
+            # Build individual DataFrames and tag them with file names.
             df1_chart = df1[[x_axis, y_axis]].dropna().copy()
             df1_chart["File"] = "File 1"
             df2_chart = df2[[x_axis, y_axis]].dropna().copy()
@@ -48,17 +88,12 @@ if csv_file1 and csv_file2:
                 unit = "ms" if chart_df[x_axis].iloc[0] > 1e10 else "s"
                 chart_df[x_axis] = pd.to_datetime(chart_df[x_axis], unit=unit)
 
-            # Build chart options.
-            options = {}
-            if chart_type == "Line Chart":
-                options["show_markers"] = st.checkbox(
-                    "Show Markers", value=True, key="cc_show_markers")
-
-            # For non-Pie charts, build a comparison chart.
             if chart_type != "Pie Chart":
+                # Build comparison chart.
                 fig = chart_utils.build_comparison_chart(
                     chart_df, x_axis, y_axis, chart_type, options)
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, use_container_width=True,
+                                key="cc_chart_nonpie")
             else:
                 # For Pie Chart, build separate charts for each file.
                 fig1 = chart_utils.build_plotly_chart(
@@ -74,3 +109,5 @@ if csv_file1 and csv_file2:
 
             st.subheader("Combined Data Table")
             st.dataframe(chart_df)
+        else:
+            st.info("Please select both X and Y axes to generate a chart.")
