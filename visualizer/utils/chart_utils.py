@@ -27,56 +27,75 @@ def build_plotly_chart(df, x_col, y_col, chart_type, options):
             title=f"{chart_type}: {y_col} vs {x_col}"
         )
     elif chart_type == "Bar Chart":
+        barmode = options.get("barmode", "group")
         fig = px.bar(
             df,
             x=x_col,
             y=y_col,
-            title=f"{chart_type}: {y_col} vs {x_col}"
+            title=f"{chart_type}: {y_col} vs {x_col}",
+            barmode=barmode
         )
     elif chart_type == "Scatter Chart":
         fig = px.scatter(
             df,
             x=x_col,
             y=y_col,
-            title=f"{chart_type}: {y_col} vs {x_col}"
+            title=f"{chart_type}: {y_col} vs {x_col}",
+            opacity=options.get("opacity", 0.8)
         )
     elif chart_type == "Area Chart":
+        line_shape = "spline" if options.get(
+            "smooth_lines", False) else "linear"
         fig = px.area(
             df,
             x=x_col,
             y=y_col,
-            title=f"{chart_type}: {y_col} vs {x_col}"
+            title=f"{chart_type}: {y_col} vs {x_col}",
+            line_shape=line_shape
         )
     elif chart_type == "Box Plot":
+        points = options.get("points", "outliers")
+        if points == "none":
+            points = False
         fig = px.box(
             df,
             x=x_col,
             y=y_col,
-            title=f"{chart_type}: {y_col} by {x_col}"
+            title=f"{chart_type}: {y_col} by {x_col}",
+            notched=options.get("notched", False),
+            points=points
         )
     elif chart_type == "Histogram":
+        # Use empty string as default histnorm for count.
+        histnorm = options.get("histnorm", "count")
+        if histnorm == "count":
+            histnorm = ""
         fig = px.histogram(
             df,
             x=x_col,
-            title=f"{chart_type}: {x_col} distribution"
+            title=f"{chart_type}: {x_col} distribution",
+            histnorm=histnorm
         )
     elif chart_type == "Violin Plot":
         fig = px.violin(
             df,
             x=x_col,
             y=y_col,
-            box=True,
+            box=options.get("box", True),
+            points=options.get("points", "outliers"),
             title=f"{chart_type}: {y_col} by {x_col}"
         )
+        if options.get("meanline", False):
+            fig.update_traces(meanline_visible=True)
     elif chart_type == "Pie Chart":
         fig = px.pie(
             df,
             names=x_col,
             values=y_col,
-            title=f"{chart_type}: {y_col} by {x_col}"
+            title=f"{chart_type}: {y_col} by {x_col}",
+            hole=options.get("donut", 0)
         )
     else:
-        # Default fallback to a line chart.
         line_shape = "spline" if options.get(
             "smooth_lines", False) else "linear"
         fig = px.line(
@@ -109,12 +128,13 @@ def build_comparison_chart(df, x_col, y_col, chart_type, options):
             title=f"{chart_type}: {y_col} vs {x_col}"
         )
     elif chart_type == "Bar Chart":
+        barmode = options.get("barmode", "group")
         fig = px.bar(
             df,
             x=x_col,
             y=y_col,
             color="File",
-            barmode="group",
+            barmode=barmode,
             title=f"{chart_type}: {y_col} vs {x_col}"
         )
     elif chart_type == "Scatter Chart":
@@ -123,41 +143,60 @@ def build_comparison_chart(df, x_col, y_col, chart_type, options):
             x=x_col,
             y=y_col,
             color="File",
-            title=f"{chart_type}: {y_col} vs {x_col}"
+            title=f"{chart_type}: {y_col} vs {x_col}",
+            opacity=options.get("opacity", 0.8)
         )
     elif chart_type == "Area Chart":
+        line_shape = "spline" if options.get(
+            "smooth_lines", False) else "linear"
         fig = px.area(
             df,
             x=x_col,
             y=y_col,
             color="File",
-            title=f"{chart_type}: {y_col} vs {x_col}"
+            title=f"{chart_type}: {y_col} vs {x_col}",
+            line_shape=line_shape
         )
     elif chart_type == "Box Plot":
+        notched = options.get("notched", False)
+        points = options.get("points", "outliers")
+        if points == "none":
+            points = False
         fig = px.box(
             df,
             x=x_col,
             y=y_col,
             color="File",
-            title=f"{chart_type}: {y_col} by {x_col}"
+            title=f"{chart_type}: {y_col} by {x_col}",
+            notched=notched,
+            points=points
         )
     elif chart_type == "Histogram":
+        histnorm = options.get("histnorm", "count")
+        if histnorm == "count":
+            histnorm = ""
         fig = px.histogram(
             df,
             x=x_col,
             color="File",
             barmode="overlay",
-            title=f"{chart_type}: {x_col} distribution by File"
+            title=f"{chart_type}: {x_col} distribution by File",
+            histnorm=histnorm
         )
     elif chart_type == "Violin Plot":
+        box = options.get("box", True)
+        points = options.get("points", "outliers")
         fig = px.violin(
             df,
             x=x_col,
             y=y_col,
             color="File",
-            box=True,
+            box=box,
+            points=points,
             title=f"{chart_type}: {y_col} by {x_col}"
         )
+        if options.get("meanline", False):
+            fig.update_traces(meanline_visible=True)
     elif chart_type == "Pie Chart":
         # For comparisons, it's common to generate separate pie charts.
         fig = None
@@ -178,7 +217,6 @@ def build_comparison_chart(df, x_col, y_col, chart_type, options):
     if fig is not None:
         for trace in fig.data:
             if hasattr(trace, "x") and trace.x is not None and hasattr(trace, "y") and trace.y is not None:
-                # Use double braces to create literal placeholders for Plotly.
                 trace.hovertemplate = (
                     "File: %{customdata}<br>" +
                     f"{x_col}: %{{x}}<br>" +
