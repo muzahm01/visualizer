@@ -1,15 +1,10 @@
 import pandas as pd
 import csv
 import io
+import streamlit as st
 
 
-def load_csv_data(uploaded_file, delimiter=","):
-    """
-    Loads CSV data from an uploaded file using the given delimiter.
-    """
-    return pd.read_csv(uploaded_file, sep=delimiter)
-
-
+@st.cache_data
 def auto_read_csv(uploaded_file):
     """
     Attempts to auto-detect the CSV delimiter using csv.Sniffer.

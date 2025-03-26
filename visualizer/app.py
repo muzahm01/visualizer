@@ -1,11 +1,20 @@
 import streamlit as st
-from visualizer import json_tab, csv_tab
 
+# Set the page configuration
 st.set_page_config(page_title="Visualizer", layout="wide")
-st.title("Visualizer - Data Visualization")
 
-tabs = st.tabs(["JSON", "CSV"])
-with tabs[0]:
-    json_tab.render_json_tab()
-with tabs[1]:
-    csv_tab.render_csv_tab()
+# Home page content
+st.title("Visualizer")
+st.markdown(
+    """
+    Welcome to Visualizer, a multipage data visualization app for JSON and CSV files.
+
+    **Pages Available:**
+    - **JSON Analysis:** Upload and analyze a single JSON file.
+    - **JSON Comparison:** Compare two JSON files.
+    - **CSV Analysis:** Upload and analyze a single CSV file.
+    - **CSV Comparison:** Compare two CSV files.
+
+    Use the sidebar to navigate between pages. Each page provides options for selecting chart types, axis (x and y) selection (optional), and additional chart options.
+    """
+)

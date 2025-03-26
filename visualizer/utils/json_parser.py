@@ -1,6 +1,9 @@
 import json
+import pandas as pd
+import streamlit as st
 
 
+@st.cache_data
 def load_json_data(uploaded_file):
     """Load JSON data from an uploaded file."""
     return json.load(uploaded_file)
