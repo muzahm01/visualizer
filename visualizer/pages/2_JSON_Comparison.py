@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from visualizer.utils import json_parser, chart_utils
-from visualizer.utils.data_utils import flatten_json_column  # Ensure this helper is available
+from visualizer.utils.data_utils import flatten_json_column
 
 st.title("JSON Files Comparison")
 
