@@ -3,6 +3,18 @@ import streamlit as st
 # Set the page configuration
 st.set_page_config(page_title="Visualizer", layout="wide")
 
+# Hide the Deploy button using custom CSS
+st.markdown(
+    """
+    <style>
+    [data-testid="stDeployButton"] {
+        display: none;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # Home page content
 st.title("Visualizer")
 st.markdown(
