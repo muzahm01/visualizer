@@ -14,7 +14,7 @@ if csv_file:
     except ValueError as e:
         st.error(str(e))
         st.stop()
-    except Exception as e:
+    except Exception:
         st.error("An error occurred while processing the file. Please try again.")
         st.stop()
 
@@ -84,7 +84,7 @@ if csv_file:
             fig = chart_utils.build_plotly_chart(
                 chart_df, x_axis, y_axis, chart_type, options)
             st.plotly_chart(fig, use_container_width=True)
-        except Exception as e:
+        except Exception:
             st.error("Unable to generate chart. Please check your data and selections.")
     else:
         st.info("Please select both X and Y axes to generate a chart.")

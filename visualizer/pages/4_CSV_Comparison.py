@@ -21,7 +21,7 @@ if csv_file1 and csv_file2:
     except ValueError as e:
         st.error(str(e))
         st.stop()
-    except Exception as e:
+    except Exception:
         st.error("An error occurred while processing the files. Please try again.")
         st.stop()
 
@@ -93,7 +93,7 @@ if csv_file1 and csv_file2:
                     st.plotly_chart(fig1, use_container_width=True, key="cc_pie_chart1")
                     st.write("#### File 2 - Pie Chart")
                     st.plotly_chart(fig2, use_container_width=True, key="cc_pie_chart2")
-            except Exception as e:
+            except Exception:
                 st.error("Unable to generate chart. Please check your data and selections.")
 
             st.subheader("Combined Data Table")

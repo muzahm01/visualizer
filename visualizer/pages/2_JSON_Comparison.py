@@ -19,7 +19,7 @@ if json_file1 and json_file2:
     except ValueError as e:
         st.error(str(e))
         st.stop()
-    except Exception as e:
+    except Exception:
         st.error("An error occurred while processing the files. Please try again.")
         st.stop()
 
@@ -53,7 +53,7 @@ if json_file1 and json_file2:
                 st.write("Flattened columns in File 2:", new_cols_2)
         except ValueError as e:
             st.warning(f"Flattening skipped: {e}")
-        except Exception as e:
+        except Exception:
             st.warning("Unable to flatten nested JSON columns. Proceeding with original structure.")
 
     # For axis selection, we use the updated columns from File 1.
@@ -120,7 +120,7 @@ if json_file1 and json_file2:
                 st.plotly_chart(fig1, use_container_width=True, key="jc_pie_chart1")
                 st.write("#### File 2 - Pie Chart")
                 st.plotly_chart(fig2, use_container_width=True, key="jc_pie_chart2")
-        except Exception as e:
+        except Exception:
             st.error("Unable to generate chart. Please check your data and selections.")
 
         st.subheader("Combined Data Table")

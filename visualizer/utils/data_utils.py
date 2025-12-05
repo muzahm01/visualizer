@@ -86,7 +86,7 @@ def flatten_json_column(df, col):
                             return None
                         return parsed
                     return x
-                except:
+                except Exception:
                     return None
 
             flat_df = pd.json_normalize(df[col].apply(safe_parse))

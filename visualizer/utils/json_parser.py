@@ -1,12 +1,10 @@
-import json
 import logging
 
 import streamlit as st
 
 from visualizer.utils.security import (
     validate_file_size,
-    validate_json_content,
-    check_dataframe_size
+    validate_json_content
 )
 
 logger = logging.getLogger(__name__)
