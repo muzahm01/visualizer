@@ -7,9 +7,16 @@ st.title("CSV File Analysis")
 # Upload one CSV file (auto-detect delimiter).
 csv_file = st.file_uploader("Upload a CSV File", type=["csv"], key="ca_csv")
 if csv_file:
-    df = csv_parser.auto_read_csv(csv_file)
-    st.subheader("Data Table")
-    st.dataframe(df)
+    try:
+        df = csv_parser.auto_read_csv(csv_file)
+        st.subheader("Data Table")
+        st.dataframe(df)
+    except ValueError as e:
+        st.error(str(e))
+        st.stop()
+    except Exception:
+        st.error("An error occurred while processing the file. Please try again.")
+        st.stop()
 
     # Get list of columns.
     columns = list(df.columns)
@@ -71,10 +78,13 @@ if csv_file:
             try:
                 unit = "ms" if chart_df[x_axis].iloc[0] > 1e10 else "s"
                 chart_df[x_axis] = pd.to_datetime(chart_df[x_axis], unit=unit)
-            except Exception as e:
-                st.error(f"Timestamp conversion failed: {e}")
-        fig = chart_utils.build_plotly_chart(
-            chart_df, x_axis, y_axis, chart_type, options)
-        st.plotly_chart(fig, use_container_width=True)
+            except Exception:
+                st.warning("Unable to convert timestamp column. Using original values.")
+        try:
+            fig = chart_utils.build_plotly_chart(
+                chart_df, x_axis, y_axis, chart_type, options)
+            st.plotly_chart(fig, use_container_width=True)
+        except Exception:
+            st.error("Unable to generate chart. Please check your data and selections.")
     else:
         st.info("Please select both X and Y axes to generate a chart.")

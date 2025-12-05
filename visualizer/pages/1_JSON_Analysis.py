@@ -8,8 +8,15 @@ st.title("JSON File Analysis")
 # Upload one JSON file.
 json_file = st.file_uploader("Upload a JSON File", type=["json"], key="ja_json")
 if json_file:
-    data = json_parser.load_json_data(json_file)
-    tables = json_parser.extract_json_tables(data)
+    try:
+        data = json_parser.load_json_data(json_file)
+        tables = json_parser.extract_json_tables(data)
+    except ValueError as e:
+        st.error(str(e))
+        st.stop()
+    except Exception:
+        st.error("An error occurred while processing the file. Please try again.")
+        st.stop()
     if tables:
         selected_table = st.selectbox("Select Table", list(tables.keys()), key="ja_table")
         table_data = tables[selected_table]
@@ -23,10 +30,16 @@ if json_file:
         # If flattening is enabled, iterate through columns and flatten any JSON string columns.
         if flatten:
             new_flat_cols = []
-            for col in list(df.columns):
-                df, flat_cols = flatten_json_column(df, col)
-                new_flat_cols.extend(flat_cols)
-            st.write("Flattened columns:", new_flat_cols)
+            try:
+                for col in list(df.columns):
+                    df, flat_cols = flatten_json_column(df, col)
+                    new_flat_cols.extend(flat_cols)
+                if new_flat_cols:
+                    st.write("Flattened columns:", new_flat_cols)
+            except ValueError as e:
+                st.warning(f"Flattening skipped: {e}")
+            except Exception:
+                st.warning("Unable to flatten nested JSON columns. Proceeding with original structure.")
 
         # Use updated DataFrame columns for axis selection.
         available_columns = list(df.columns)
@@ -44,10 +57,13 @@ if json_file:
                 try:
                     unit = "ms" if chart_df[x_axis].iloc[0] > 1e10 else "s"
                     chart_df[x_axis] = pd.to_datetime(chart_df[x_axis], unit=unit)
-                except Exception as e:
-                    st.error(f"Timestamp conversion failed: {e}")
-            fig = chart_utils.build_plotly_chart(chart_df, x_axis, y_axis, chart_type, options={})
-            st.plotly_chart(fig, use_container_width=True)
+                except Exception:
+                    st.warning("Unable to convert timestamp column. Using original values.")
+            try:
+                fig = chart_utils.build_plotly_chart(chart_df, x_axis, y_axis, chart_type, options={})
+                st.plotly_chart(fig, use_container_width=True)
+            except Exception:
+                st.error("Unable to generate chart. Please check your data and selections.")
         else:
             st.info("Please select both X and Y axes to generate a chart.")
     else:
