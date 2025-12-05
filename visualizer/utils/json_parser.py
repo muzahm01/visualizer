@@ -1,12 +1,47 @@
 import json
+import logging
 
 import streamlit as st
+
+from visualizer.utils.security import (
+    validate_file_size,
+    validate_json_content,
+    check_dataframe_size
+)
+
+logger = logging.getLogger(__name__)
 
 
 @st.cache_data
 def load_json_data(uploaded_file):
-    """Load JSON data from an uploaded file."""
-    return json.load(uploaded_file)
+    """
+    Load JSON data from an uploaded file with security validation.
+
+    Args:
+        uploaded_file: Streamlit uploaded file object
+
+    Returns:
+        Parsed JSON data
+
+    Raises:
+        ValueError: If file validation fails
+    """
+    try:
+        # Validate file size
+        validate_file_size(uploaded_file)
+
+        # Validate and parse JSON content
+        data = validate_json_content(uploaded_file)
+
+        return data
+    except ValueError as e:
+        # Re-raise validation errors with user-friendly message
+        logger.error(f"JSON load failed: {e}")
+        raise
+    except Exception as e:
+        # Log detailed error, show generic message to user
+        logger.error(f"Unexpected error loading JSON: {e}", exc_info=True)
+        raise ValueError("Unable to load JSON file. Please check the file format.")
 
 
 def extract_json_tables(json_data):

@@ -9,14 +9,21 @@ csv_file1 = st.file_uploader("Upload CSV File 1", type=["csv"], key="cc_csv1")
 csv_file2 = st.file_uploader("Upload CSV File 2", type=["csv"], key="cc_csv2")
 
 if csv_file1 and csv_file2:
-    # Auto-detect delimiter and load CSV files.
-    df1 = csv_parser.auto_read_csv(csv_file1)
-    df2 = csv_parser.auto_read_csv(csv_file2)
+    try:
+        # Auto-detect delimiter and load CSV files.
+        df1 = csv_parser.auto_read_csv(csv_file1)
+        df2 = csv_parser.auto_read_csv(csv_file2)
 
-    st.subheader("File 1 Data")
-    st.dataframe(df1)
-    st.subheader("File 2 Data")
-    st.dataframe(df2)
+        st.subheader("File 1 Data")
+        st.dataframe(df1)
+        st.subheader("File 2 Data")
+        st.dataframe(df2)
+    except ValueError as e:
+        st.error(str(e))
+        st.stop()
+    except Exception as e:
+        st.error("An error occurred while processing the files. Please try again.")
+        st.stop()
 
     # Find common columns.
     common_cols = sorted(list(set(df1.columns).intersection(set(df2.columns))))
@@ -69,19 +76,25 @@ if csv_file1 and csv_file2:
 
             # Convert x-axis to datetime if its name suggests a timestamp.
             if "timestamp" in x_axis.lower() and pd.api.types.is_numeric_dtype(chart_df[x_axis]):
-                unit = "ms" if chart_df[x_axis].iloc[0] > 1e10 else "s"
-                chart_df[x_axis] = pd.to_datetime(chart_df[x_axis], unit=unit)
+                try:
+                    unit = "ms" if chart_df[x_axis].iloc[0] > 1e10 else "s"
+                    chart_df[x_axis] = pd.to_datetime(chart_df[x_axis], unit=unit)
+                except Exception:
+                    st.warning("Unable to convert timestamp column. Using original values.")
 
-            if chart_type != "Pie Chart":
-                fig = chart_utils.build_comparison_chart(chart_df, x_axis, y_axis, chart_type, options)
-                st.plotly_chart(fig, use_container_width=True, key="cc_chart_nonpie")
-            else:
-                fig1 = chart_utils.build_plotly_chart(df1_chart, x_axis, y_axis, "Pie Chart", options)
-                fig2 = chart_utils.build_plotly_chart(df2_chart, x_axis, y_axis, "Pie Chart", options)
-                st.write("#### File 1 - Pie Chart")
-                st.plotly_chart(fig1, use_container_width=True, key="cc_pie_chart1")
-                st.write("#### File 2 - Pie Chart")
-                st.plotly_chart(fig2, use_container_width=True, key="cc_pie_chart2")
+            try:
+                if chart_type != "Pie Chart":
+                    fig = chart_utils.build_comparison_chart(chart_df, x_axis, y_axis, chart_type, options)
+                    st.plotly_chart(fig, use_container_width=True, key="cc_chart_nonpie")
+                else:
+                    fig1 = chart_utils.build_plotly_chart(df1_chart, x_axis, y_axis, "Pie Chart", options)
+                    fig2 = chart_utils.build_plotly_chart(df2_chart, x_axis, y_axis, "Pie Chart", options)
+                    st.write("#### File 1 - Pie Chart")
+                    st.plotly_chart(fig1, use_container_width=True, key="cc_pie_chart1")
+                    st.write("#### File 2 - Pie Chart")
+                    st.plotly_chart(fig2, use_container_width=True, key="cc_pie_chart2")
+            except Exception as e:
+                st.error("Unable to generate chart. Please check your data and selections.")
 
             st.subheader("Combined Data Table")
             st.dataframe(chart_df)

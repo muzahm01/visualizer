@@ -10,11 +10,18 @@ json_file1 = st.file_uploader("Upload JSON File 1", type=["json"], key="jc_json1
 json_file2 = st.file_uploader("Upload JSON File 2", type=["json"], key="jc_json2")
 
 if json_file1 and json_file2:
-    data1 = json_parser.load_json_data(json_file1)
-    data2 = json_parser.load_json_data(json_file2)
+    try:
+        data1 = json_parser.load_json_data(json_file1)
+        data2 = json_parser.load_json_data(json_file2)
 
-    tables1 = json_parser.extract_json_tables(data1)
-    tables2 = json_parser.extract_json_tables(data2)
+        tables1 = json_parser.extract_json_tables(data1)
+        tables2 = json_parser.extract_json_tables(data2)
+    except ValueError as e:
+        st.error(str(e))
+        st.stop()
+    except Exception as e:
+        st.error("An error occurred while processing the files. Please try again.")
+        st.stop()
 
     selected_table = st.selectbox("Select Table", list(tables1.keys()), key="jc_table")
     table_data1 = tables1[selected_table]
@@ -31,16 +38,23 @@ if json_file1 and json_file2:
     # Checkbox: Option to flatten nested JSON columns.
     flatten = st.checkbox("Flatten nested JSON columns", value=True, key="jc_flatten")
     if flatten:
-        new_cols_1 = []
-        for col in list(df1.columns):
-            df1, flat_cols = flatten_json_column(df1, col)
-            new_cols_1.extend(flat_cols)
-        new_cols_2 = []
-        for col in list(df2.columns):
-            df2, flat_cols = flatten_json_column(df2, col)
-            new_cols_2.extend(flat_cols)
-        st.write("Flattened columns in File 1:", new_cols_1)
-        st.write("Flattened columns in File 2:", new_cols_2)
+        try:
+            new_cols_1 = []
+            for col in list(df1.columns):
+                df1, flat_cols = flatten_json_column(df1, col)
+                new_cols_1.extend(flat_cols)
+            new_cols_2 = []
+            for col in list(df2.columns):
+                df2, flat_cols = flatten_json_column(df2, col)
+                new_cols_2.extend(flat_cols)
+            if new_cols_1:
+                st.write("Flattened columns in File 1:", new_cols_1)
+            if new_cols_2:
+                st.write("Flattened columns in File 2:", new_cols_2)
+        except ValueError as e:
+            st.warning(f"Flattening skipped: {e}")
+        except Exception as e:
+            st.warning("Unable to flatten nested JSON columns. Proceeding with original structure.")
 
     # For axis selection, we use the updated columns from File 1.
     available_columns = list(df1.columns)
@@ -89,19 +103,25 @@ if json_file1 and json_file2:
 
         # Convert x-axis to datetime if its name suggests a timestamp.
         if "timestamp" in x_axis.lower() and pd.api.types.is_numeric_dtype(chart_df[x_axis]):
-            unit = "ms" if chart_df[x_axis].iloc[0] > 1e10 else "s"
-            chart_df[x_axis] = pd.to_datetime(chart_df[x_axis], unit=unit)
+            try:
+                unit = "ms" if chart_df[x_axis].iloc[0] > 1e10 else "s"
+                chart_df[x_axis] = pd.to_datetime(chart_df[x_axis], unit=unit)
+            except Exception:
+                st.warning("Unable to convert timestamp column. Using original values.")
 
-        if chart_type != "Pie Chart":
-            fig = chart_utils.build_comparison_chart(chart_df, x_axis, y_axis, chart_type, options)
-            st.plotly_chart(fig, use_container_width=True, key="jc_chart_nonpie")
-        else:
-            fig1 = chart_utils.build_plotly_chart(df1_chart, x_axis, y_axis, "Pie Chart", options)
-            fig2 = chart_utils.build_plotly_chart(df2_chart, x_axis, y_axis, "Pie Chart", options)
-            st.write("#### File 1 - Pie Chart")
-            st.plotly_chart(fig1, use_container_width=True, key="jc_pie_chart1")
-            st.write("#### File 2 - Pie Chart")
-            st.plotly_chart(fig2, use_container_width=True, key="jc_pie_chart2")
+        try:
+            if chart_type != "Pie Chart":
+                fig = chart_utils.build_comparison_chart(chart_df, x_axis, y_axis, chart_type, options)
+                st.plotly_chart(fig, use_container_width=True, key="jc_chart_nonpie")
+            else:
+                fig1 = chart_utils.build_plotly_chart(df1_chart, x_axis, y_axis, "Pie Chart", options)
+                fig2 = chart_utils.build_plotly_chart(df2_chart, x_axis, y_axis, "Pie Chart", options)
+                st.write("#### File 1 - Pie Chart")
+                st.plotly_chart(fig1, use_container_width=True, key="jc_pie_chart1")
+                st.write("#### File 2 - Pie Chart")
+                st.plotly_chart(fig2, use_container_width=True, key="jc_pie_chart2")
+        except Exception as e:
+            st.error("Unable to generate chart. Please check your data and selections.")
 
         st.subheader("Combined Data Table")
         st.dataframe(chart_df)
